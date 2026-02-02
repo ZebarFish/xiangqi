@@ -1,0 +1,8 @@
+{
+  "name": "亲情象棋",
+  "description": "一款专为家庭设计的在线中国象棋应用。集成了 Gemini Live API，提供实时的 AI 视频/语音辅助功能。包含完整的对弈功能、规则验证，以及一位能看懂棋局并提供建议的特级大师 AI 伙伴。",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
