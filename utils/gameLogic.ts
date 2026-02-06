@@ -151,3 +151,22 @@ const checkLinearPath = (from: Position, to: Position, pieces: Piece[]): number 
   }
   return count;
 };
+
+// --- NEW FUNCTION: Check Detection ---
+export const isGeneralInCheck = (pieces: Piece[], currentTurnSide: Side): boolean => {
+  // 1. Find the General of the current side
+  const general = pieces.find(p => p.type === PieceType.GENERAL && p.side === currentTurnSide && !p.dead);
+  if (!general) return false; // Should not happen in valid game
+
+  // 2. Find all enemy pieces
+  const enemySide = currentTurnSide === Side.RED ? Side.BLACK : Side.RED;
+  const enemies = pieces.filter(p => p.side === enemySide && !p.dead);
+
+  // 3. Check if any enemy can move to General's position
+  for (const enemy of enemies) {
+    if (isValidMove(enemy, general.position, pieces)) {
+      return true;
+    }
+  }
+  return false;
+};

@@ -109,7 +109,12 @@ export class SupabaseService {
 
   private packPiecesColumn(state: Partial<OnlinePayload>, currentPiecesVal: any): any {
       // Reconstruct the full packed object from partial update + existing data
-      let base = { 
+      let base: {
+        board: any[];
+        history: any[];
+        players: any;
+        meta: any;
+      } = { 
           board: [], 
           history: [], 
           players: { red: null, black: null, spectators: [] }, 
@@ -119,13 +124,19 @@ export class SupabaseService {
       if (Array.isArray(currentPiecesVal)) {
           base.board = currentPiecesVal;
       } else if (currentPiecesVal && typeof currentPiecesVal === 'object') {
+          // SAFE SPREAD: Load everything from DB first
           base = { ...base, ...currentPiecesVal };
       }
 
       // Merge new state
       if (state.pieces) base.board = state.pieces as any;
       if (state.history) base.history = state.history as any;
-      if (state.players) base.players = state.players as any;
+      
+      // CRITICAL FIX: Only overwrite players if state.players is explicitly provided
+      if (state.players) {
+          base.players = state.players as any;
+      }
+      
       if (state.meta) base.meta = state.meta as any;
 
       return base;
@@ -202,8 +213,8 @@ export class SupabaseService {
     await this.client.from('games').update(updatePayload).eq('id', roomId);
   }
 
-  subscribeToGame(roomId: string, onUpdate: (state: OnlinePayload) => void) {
-    if (!this.client) return;
+  subscribeToGame(roomId: string, onUpdate: (state: OnlinePayload) => void): RealtimeChannel | null {
+    if (!this.client) return null;
     if (this.channel) this.client.removeChannel(this.channel);
 
     this.channel = this.client
@@ -218,6 +229,8 @@ export class SupabaseService {
         }
       )
       .subscribe();
+      
+    return this.channel;
   }
 
   unsubscribe() {
