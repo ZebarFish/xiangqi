@@ -8,6 +8,7 @@ type LiveServerMessage = any;
 
 export class GeminiLiveService {
   private client: any = null;
+  private sdkModule: any = null;
   private apiKey: string = '';
   private session: any | null = null;
   private inputAudioContext: AudioContext | null = null;
@@ -16,7 +17,7 @@ export class GeminiLiveService {
 
   constructor() {
     // Read API key from browser-friendly Vite env first, then fall back to Node envs.
-    const env: any = (typeof import !== 'undefined' && typeof import.meta !== 'undefined') ? (import.meta as any).env : process.env;
+    const env: any = (typeof import.meta !== 'undefined' && typeof import.meta !== 'undefined') ? (import.meta as any).env : process.env;
     this.apiKey = env?.VITE_GEMINI_API_KEY || process.env?.API_KEY || process.env?.GEMINI_API_KEY || '';
     // Do NOT initialize the Gemini client here to avoid throwing when no API key is present.
   }
@@ -28,6 +29,7 @@ export class GeminiLiveService {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const mod = await import('@google/genai');
+    this.sdkModule = mod;
     this.client = new mod.GoogleGenAI({ apiKey: this.apiKey });
   }
 
@@ -46,6 +48,7 @@ export class GeminiLiveService {
 
     // Ensure client is initialized and connect to Gemini Live
     await this.initClient();
+    const Modality = this.sdkModule?.Modality;
     const sessionPromise = this.client.live.connect({
       model: 'gemini-2.5-flash-native-audio-preview-12-2025',
       callbacks: {
@@ -63,7 +66,7 @@ export class GeminiLiveService {
         onerror: (e) => callbacks.onError(new Error("Live API 错误")),
       },
       config: {
-        responseModalities: [Modality.AUDIO],
+        responseModalities: [Modality ? Modality.AUDIO : 'AUDIO'],
         speechConfig: {
           voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Fenrir' } }, // Fenrir sounds like a wise old man
         },
