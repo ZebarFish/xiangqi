@@ -42,9 +42,18 @@
 }
 </script>
 <link rel="stylesheet" href="/index.css">
+    <link rel="manifest" href="/manifest.webmanifest">
 </head>
   <body class="bg-stone-100 touch-pan-x touch-pan-y">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script type="module">
+      if ('serviceWorker' in navigator) {
+        const swUrl = import.meta.env && import.meta.env.DEV ? '/dev-sw.js?dev-sw' : '/sw.js';
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register(swUrl).catch((err) => console.error('SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

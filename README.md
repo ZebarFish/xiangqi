@@ -66,3 +66,28 @@ API_KEY=your_gemini_api_key
     *   [x] Implement Audio/Video Streaming.
 5.  **Deployment**
     *   [ ] Deploy to Vercel/Netlify.
+
+## PWA
+
+本项目启用了 PWA 支持（通过 `vite-plugin-pwa`）：
+
+- 清单 (manifest): 由 `vite.config.ts` 中的 `VitePWA` 插件生成，构建产物为 `dist/manifest.webmanifest`。
+- 应用图标: `icon.svg` 位于项目根目录，被作为可遮罩图标使用。
+- Service Worker: 构建后 `dist/sw.js`（生产），开发时使用 `dev-sw.js`（由插件在 dev 环境注入）。
+
+运行与测试：
+
+开发（启用 dev SW）:
+```bash
+npm run dev
+```
+然后在浏览器打开 `http://localhost:5173`（或 Vite 提示的地址），打开开发者工具 -> Application -> Service Workers，可看到 `dev-sw.js` 已注册。
+
+生产构建并本地预览：
+```bash
+npm run build
+npm run preview
+```
+在预览页面打开开发者工具 -> Application -> Manifest 可查看应用清单；在 Application -> Service Workers 可查看 `sw.js` 是否已注册。
+
+注意：将网站安装为 PWA 会把前端资源暴露到用户设备。若你需要更严格的后端安全（例如保护 API keys），请使用后端代理而不是把敏感密钥放到客户端。
