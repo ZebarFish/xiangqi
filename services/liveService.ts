@@ -1,14 +1,14 @@
-import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
-
 export interface LiveSessionCallbacks {
   onOpen: () => void;
   onMessage: (message: LiveServerMessage) => void;
   onClose: () => void;
   onError: (error: Error) => void;
 }
+type LiveServerMessage = any;
 
 export class GeminiLiveService {
-  private client: GoogleGenAI;
+  private client: any = null;
+  private apiKey: string = '';
   private session: any | null = null;
   private inputAudioContext: AudioContext | null = null;
   private outputAudioContext: AudioContext | null = null;
@@ -16,13 +16,27 @@ export class GeminiLiveService {
 
   constructor() {
     // Read API key from browser-friendly Vite env first, then fall back to Node envs.
-    const env: any = (typeof import.meta !== 'undefined' && typeof import.meta !== 'undefined') ? (import.meta as any).env : process.env;
-    const apiKey = env?.VITE_GEMINI_API_KEY || process.env?.API_KEY || process.env?.GEMINI_API_KEY || '';
+    const env: any = (typeof import !== 'undefined' && typeof import.meta !== 'undefined') ? (import.meta as any).env : process.env;
+    this.apiKey = env?.VITE_GEMINI_API_KEY || process.env?.API_KEY || process.env?.GEMINI_API_KEY || '';
+    // Do NOT initialize the Gemini client here to avoid throwing when no API key is present.
+  }
 
-    this.client = new GoogleGenAI({ apiKey });
+  private async initClient() {
+    if (this.client) return;
+    if (!this.apiKey) throw new Error('Live features are disabled (no API key).');
+    // Dynamically import the SDK only when needed and when API key is present.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const mod = await import('@google/genai');
+    this.client = new mod.GoogleGenAI({ apiKey: this.apiKey });
   }
 
   async connect(callbacks: LiveSessionCallbacks, boardCanvas: HTMLCanvasElement) {
+    // If no API key, fail gracefully with informative error
+    if (!this.apiKey) {
+      throw new Error('Live features disabled: no Gemini API key configured.');
+    }
+
     // Setup Audio Contexts
     this.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
     this.outputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -30,7 +44,8 @@ export class GeminiLiveService {
     // Get Mic Stream
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // Connect to Gemini Live
+    // Ensure client is initialized and connect to Gemini Live
+    await this.initClient();
     const sessionPromise = this.client.live.connect({
       model: 'gemini-2.5-flash-native-audio-preview-12-2025',
       callbacks: {
