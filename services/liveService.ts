@@ -62,8 +62,8 @@ export class GeminiLiveService {
         onmessage: (msg: LiveServerMessage) => {
           this.handleServerMessage(msg, callbacks.onMessage);
         },
-        onclose: (e) => callbacks.onClose(),
-        onerror: (e) => callbacks.onError(new Error("Live API 错误")),
+        onclose: () => callbacks.onClose(),
+        onerror: () => callbacks.onError(new Error("Live API 错误")),
       },
       config: {
         responseModalities: [Modality ? Modality.AUDIO : 'AUDIO'],
