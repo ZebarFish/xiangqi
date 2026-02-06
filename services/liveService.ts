@@ -15,8 +15,11 @@ export class GeminiLiveService {
   private videoInterval: number | null = null;
 
   constructor() {
-    // API Key must be obtained exclusively from process.env.API_KEY per guidelines
-    this.client = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Read API key from browser-friendly Vite env first, then fall back to Node envs.
+    const env: any = (typeof import.meta !== 'undefined' && typeof import.meta !== 'undefined') ? (import.meta as any).env : process.env;
+    const apiKey = env?.VITE_GEMINI_API_KEY || process.env?.API_KEY || process.env?.GEMINI_API_KEY || '';
+
+    this.client = new GoogleGenAI({ apiKey });
   }
 
   async connect(callbacks: LiveSessionCallbacks, boardCanvas: HTMLCanvasElement) {
